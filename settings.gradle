@@ -1,0 +1,2 @@
+rootProject.name = 'grpc-aggregator'
+include 'grpc-api'

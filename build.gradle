@@ -1,0 +1,90 @@
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.bmuschko:gradle-docker-plugin:3.1.0'
+    }
+
+}
+
+group 'com.grpcvsrest'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+apply plugin: 'application'
+apply plugin: 'com.bmuschko.docker-remote-api'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+startScripts.enabled = false
+
+repositories {
+    jcenter()
+    maven {
+        url "https://grpcvsrest.s3.amazonaws.com/snapshots"
+    }
+}
+
+dependencies {
+    compile 'io.grpc:grpc-all:1.6.1'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.6'
+    compile project(':grpc-api')
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+
+def mainClassName = "com.grpcvsrest.grpc.aggregator.AggregationServer"
+
+task runServer(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    main = "$mainClassName"
+}
+
+task runClient(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'com.grpcvsrest.grpc.aggregator.AggregationClient'
+}
+
+runClient {
+    if (project.hasProperty("appArgs")) {
+        args Eval.me(appArgs)
+    }
+}
+
+jar {
+    manifest {
+        attributes "Main-Class": "$mainClassName"
+    }
+
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+task buildDocker(type: DockerBuildImage) {
+    dependsOn build
+    inputDir = project.projectDir
+    tag = 'grpc-aggregator:latest'
+}
+
+task tagDocker(type: Exec) {
+    dependsOn buildDocker
+    commandLine 'docker', 'tag', 'grpc-aggregator:latest', 'gcr.io/alien-fold-180922/grpc-aggregator:latest'
+}
+
+task pushDocker(type: Exec) {
+    dependsOn tagDocker
+    commandLine 'gcloud', 'docker', '--', 'push', 'gcr.io/alien-fold-180922/grpc-aggregator:latest'
+}
+
+task deploy(type: Exec) {
+    commandLine 'kubectl', 'create', '-f', 'k8s/grpc-aggregator.yaml'
+}
+
+task undeploy(type: Exec) {
+    commandLine 'kubectl', 'delete', '-f', 'k8s/grpc-aggregator.yaml'
+}
