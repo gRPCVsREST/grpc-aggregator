@@ -37,7 +37,7 @@ kind: Service
 metadata:
   name: grpc-aggregator-service
 spec:
-  type: LoadBalancer
+  type: NodePort
   selector:
     app: grpc-aggregator
   ports:
