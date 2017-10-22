@@ -7,7 +7,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class AggregationIdGenerator implements IdGenerator {
+public class AggregationIdRepository implements IdRepository {
 
     private final ConcurrentMap<Integer, SourceId> aggrIdToSourceId = Maps.newConcurrentMap();
     private final ConcurrentMap<SourceId, Integer> sourceIdToAggrId = Maps.newConcurrentMap();
@@ -20,6 +20,12 @@ public class AggregationIdGenerator implements IdGenerator {
         Integer existingAggrId = sourceIdToAggrId.get(sourceId);
 
         return existingAggrId != null? existingAggrId : generate(sourceId);
+    }
+
+    @Override
+    public ResponseType typeByAggregationId(int aggregationId) {
+        SourceId sourceId = aggrIdToSourceId.get(aggregationId);
+        return sourceId != null? sourceId.type : null;
     }
 
     private int generate(SourceId sourceId) {

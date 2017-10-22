@@ -15,11 +15,11 @@ import java.util.concurrent.CompletableFuture;
  */
 public class AggregationStreamingService extends AggregationStreamingServiceImplBase {
 
-    private final IdGenerator idGenerator;
+    private final IdRepository idRepository;
     private final Collection<TypedStub> stubs;
 
-    public AggregationStreamingService(IdGenerator idGenerator, TypedStub... stubs) {
-        this.idGenerator = idGenerator;
+    public AggregationStreamingService(IdRepository idRepository, TypedStub... stubs) {
+        this.idRepository = idRepository;
         this.stubs = Arrays.asList(stubs);
     }
 
@@ -37,7 +37,7 @@ public class AggregationStreamingService extends AggregationStreamingServiceImpl
                             new StreamObserver<ContentStreamingResponse>() {
                                 @Override
                                 public void onNext(ContentStreamingResponse response) {
-                                    int aggregationId = idGenerator.aggregationId(response.getId(), typedStub.type);
+                                    int aggregationId = idRepository.aggregationId(response.getId(), typedStub.type);
 
                                     AggregationStreamingResponse aggrResponse = AggregationStreamingResponse.newBuilder()
                                             .setId(aggregationId)
