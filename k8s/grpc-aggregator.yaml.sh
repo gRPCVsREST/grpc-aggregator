@@ -1,7 +1,10 @@
+#!/bin/bash
+
+cat <<YAML
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  name: grpc-aggregator-deployment
+  name: grpc-aggregator
 spec:
   replicas: 1
   strategy:
@@ -13,30 +16,25 @@ spec:
     spec:
       containers:
         - name: grpc-aggregator
-          image: gcr.io/alien-fold-180922/grpc-aggregator:latest
+          image: gcr.io/$GCP_PROJECT/grpc-aggregator:latest
           imagePullPolicy: Always
-          resources:
-            limits:
-              cpu: "1"
-            requests:
-              cpu: "100m"
           ports:
             - containerPort: 8080
             - containerPort: 9999
           env:
             - name: peremoga_host
-              value: "grpc-peremoga-content-service"
+              value: "grpc-content-a"
             - name: peremoga_port
               value: "8080"
             - name: zrada_host
-              value: "grpc-zrada-content-service"
+              value: "grpc-content-b"
             - name: zrada_port
               value: "8080"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: grpc-aggregator-service
+  name: grpc-aggregator
 spec:
   type: NodePort
   selector:
@@ -46,3 +44,4 @@ spec:
      targetPort: 8080
      protocol: TCP
 ---
+YAML

@@ -67,26 +67,4 @@ jar {
     }
 }
 
-task buildDocker(type: DockerBuildImage) {
-    dependsOn build
-    inputDir = project.projectDir
-    tag = 'grpc-aggregator:latest'
-}
-
-task tagDocker(type: Exec) {
-    dependsOn buildDocker
-    commandLine 'docker', 'tag', 'grpc-aggregator:latest', 'gcr.io/alien-fold-180922/grpc-aggregator:latest'
-}
-
-task pushDocker(type: Exec) {
-    dependsOn tagDocker
-    commandLine 'gcloud', 'docker', '--', 'push', 'gcr.io/alien-fold-180922/grpc-aggregator:latest'
-}
-
-task deploy(type: Exec) {
-    commandLine 'kubectl', 'create', '-f', 'k8s/grpc-aggregator.yaml'
-}
-
-task undeploy(type: Exec) {
-    commandLine 'kubectl', 'delete', '-f', 'k8s/grpc-aggregator.yaml'
-}
+apply from: 'https://raw.githubusercontent.com/gRPCVsREST/gradle-common/master/common.gradle'
