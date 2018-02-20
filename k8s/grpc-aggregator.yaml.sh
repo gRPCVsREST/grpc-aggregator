@@ -30,6 +30,8 @@ spec:
               value: "grpc-content-b"
             - name: zrada_port
               value: "8080"
+            - name: counter
+              value: "$(date +%s)"
 ---
 apiVersion: v1
 kind: Service
