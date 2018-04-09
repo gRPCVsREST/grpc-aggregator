@@ -22,16 +22,20 @@ spec:
             - containerPort: 8080
             - containerPort: 9999
           env:
-            - name: peremoga_host
+            - name: content_a_host
               value: "grpc-content-a"
-            - name: peremoga_port
+            - name: content_a_port
               value: "8080"
-            - name: zrada_host
+            - name: content_b_host
               value: "grpc-content-b"
-            - name: zrada_port
+            - name: content_b_port
               value: "8080"
             - name: counter
               value: "$(date +%s)"
+            - name: ZIPKIN_SERVICE_HOST
+              value: "zipkin"
+            - name: ZIPKIN_SERVICE_PORT
+              value: "9411"
 ---
 apiVersion: v1
 kind: Service

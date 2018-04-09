@@ -13,9 +13,9 @@ import java.util.concurrent.Semaphore;
 public class AggregationClient {
 
     public static void main(String... args) throws InterruptedException {
-        int port = 18080;
+        int port = 8080;
         ManagedChannel channel = NettyChannelBuilder.forAddress("localhost", port)
-                .usePlaintext(true).build();
+                .usePlaintext().build();
 
         AggregationStreamingServiceStub stub = AggregationStreamingServiceGrpc.newStub(channel);
 

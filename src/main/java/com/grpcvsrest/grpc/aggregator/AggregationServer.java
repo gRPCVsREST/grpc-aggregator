@@ -3,6 +3,7 @@ package com.grpcvsrest.grpc.aggregator;
 import brave.Tracing;
 import brave.grpc.GrpcTracing;
 import com.grpcvsrest.grpc.ContentStreamingServiceGrpc;
+import com.grpcvsrest.grpc.ResponseType;
 import com.grpcvsrest.grpc.aggregator.AggregationStreamingService.TypedStub;
 import io.grpc.ManagedChannel;
 import io.grpc.Server;
@@ -14,8 +15,6 @@ import zipkin2.reporter.urlconnection.URLConnectionSender;
 import java.io.IOException;
 
 import static brave.sampler.Sampler.ALWAYS_SAMPLE;
-import static com.grpcvsrest.grpc.ResponseType.PEREMOGA;
-import static com.grpcvsrest.grpc.ResponseType.ZRADA;
 
 /**
  * Starts gRPC server with {@link AggregationStreamingService} and {@link ResponseTypeService}.
@@ -26,27 +25,29 @@ public class AggregationServer {
 
         GrpcTracing grpcTracing = grpcTracing();
 
-        String peremogaHost = System.getenv("peremoga_host");
-        int peremogaPort = Integer.valueOf(System.getenv("peremoga_port"));
+        String contentAHost = System.getenv("content_a_host");
+        int contentAPort = Integer.valueOf(System.getenv("content_a_port"));
 
-        String zradaHost = System.getenv("zrada_host");
-        int zradaPort = Integer.valueOf(System.getenv("zrada_port"));
+        String conentBHost = System.getenv("content_b_host");
+        int contentBPort = Integer.valueOf(System.getenv("content_b_port"));
 
-        ManagedChannel peremogaChannel = NettyChannelBuilder.forAddress(peremogaHost, peremogaPort)
+        ManagedChannel serviceAChannel = NettyChannelBuilder.forAddress(contentAHost, contentAPort)
                 .intercept(grpcTracing.newClientInterceptor())
-                .usePlaintext(true)
+                .usePlaintext()
                 .build();
-        ManagedChannel zradaChannel = NettyChannelBuilder.forAddress(zradaHost, zradaPort)
+        ManagedChannel serviceBChannel = NettyChannelBuilder.forAddress(conentBHost, contentBPort)
                 .intercept(grpcTracing.newClientInterceptor())
-                .usePlaintext(true)
+                .usePlaintext()
                 .build();
 
-        TypedStub peremogaStub = new TypedStub(ContentStreamingServiceGrpc.newStub(peremogaChannel), PEREMOGA);
-        TypedStub zradaStub = new TypedStub(ContentStreamingServiceGrpc.newStub(zradaChannel), ZRADA);
+        TypedStub stubA = new TypedStub(ContentStreamingServiceGrpc.newStub(serviceAChannel),
+                ResponseType.forNumber(1));
+        TypedStub stubB = new TypedStub(ContentStreamingServiceGrpc.newStub(serviceBChannel),
+                ResponseType.forNumber(2));
 
         AggregationIdRepository idRepository = new AggregationIdRepository();
         Server grpcServer = NettyServerBuilder.forPort(8080)
-                .addService(new AggregationStreamingService(idRepository, peremogaStub, zradaStub))
+                .addService(new AggregationStreamingService(idRepository, stubA, stubB))
                 .addService(new ResponseTypeService(idRepository))
                 .intercept(grpcTracing.newServerInterceptor()).build()
                 .start();
